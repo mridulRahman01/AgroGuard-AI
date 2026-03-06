@@ -13,7 +13,7 @@ const CROPS = ['🌾 ধান', '🥔 আলু', '🍅 টমেটো', '🌾
 
 const CONTACT_INFO = [
     { icon: MapPin, text: 'ঢাকা, বাংলাদেশ' },
-    { icon: Phone, text: '+880 1700-000000' },
+    { icon: Phone, text: '+880 1747381040' },
     { icon: Mail, text: 'info@agroguard.ai' },
 ];
 
@@ -107,11 +107,7 @@ const Footer = () => (
                 <p className="text-green-300 text-sm" style={{ fontFamily: 'Hind Siliguri, sans-serif' }}>
                     © ২০২৬ AgroGuard AI। সর্বস্বত্ব সংরক্ষিত।
                 </p>
-                <p className="text-green-400 text-sm flex items-center gap-1.5" style={{ fontFamily: 'Hind Siliguri, sans-serif' }}>
-                    বাংলাদেশের কৃষকদের জন্য
-                    <Heart className="w-3.5 h-3.5 text-red-400 fill-red-400" />
-                    দিয়ে তৈরি
-                </p>
+
             </div>
         </div>
     </footer>

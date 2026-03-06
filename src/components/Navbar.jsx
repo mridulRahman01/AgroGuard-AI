@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, Leaf, User, LayoutDashboard, Settings, LogOut } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import toast from 'react-hot-toast';
 
 const NAV_LINKS = [
     { to: '/', label: 'হোম' },
@@ -116,6 +117,7 @@ const Navbar = () => {
                                                 e.preventDefault();
                                                 try {
                                                     await signOut();
+                                                    toast.success('Logged out successfully');
                                                 } finally {
                                                     setIsDropdownOpen(false);
                                                     navigate('/login');
@@ -190,6 +192,7 @@ const Navbar = () => {
                                     e.preventDefault();
                                     try {
                                         await signOut();
+                                        toast.success('Logged out successfully');
                                     } finally {
                                         setIsOpen(false);
                                         navigate('/login');

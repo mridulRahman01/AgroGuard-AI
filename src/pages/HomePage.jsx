@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Microscope, BarChart3, Lightbulb, ArrowRight, CheckCircle, Users, Zap, Shield, Leaf, Star, ChevronDown } from 'lucide-react';
+import AudioGuidePlayer from '../components/AudioGuidePlayer';
 
 /* ── Data ── */
 const FEATURES = [
@@ -38,7 +39,7 @@ const STEPS = [
 ];
 
 const TESTIMONIALS = [
-    { name: 'রহিম উদ্দিন', location: 'রাজশাহী', text: 'এই অ্যাপ ব্যবহার করে আমার ধান ক্ষেতের রোগ সময়মতো ধরা পড়েছে। অনেক উপকার হয়েছে।', rating: 5, crop: '🌾 ধান চাষি' },
+    { name: 'রহিম উদ্দিন', location: 'রাজশাহী', text: 'এই ওয়েবসাইট ব্যবহার করে আমার ধান ক্ষেতের রোগ সময়মতো ধরা পড়েছে। অনেক উপকার হয়েছে।', rating: 5, crop: '🌾 ধান চাষি' },
     { name: 'সুমাইয়া বেগম', location: 'বগুড়া', text: 'আলুর লেট ব্লাইট রোগ আগে চিনতাম না। এখন ছবি তুলে দিলেই সব বুঝে যাই।', rating: 5, crop: '🥔 আলু চাষি' },
     { name: 'করিম শেখ', location: 'যশোর', text: 'টমেটো চাষে অনেক লোকসান হতো। এখন AgroGuard AI দিয়ে আগেভাগেই ব্যবস্থা নিতে পারি।', rating: 5, crop: '🍅 টমেটো চাষি' },
 ];
@@ -83,14 +84,12 @@ const HomePage = () => (
                             আপনার ফসলের ছবি তুলুন এবং মাত্র কয়েক সেকেন্ডে জানুন কোন রোগ হয়েছে, কতটুকু ক্ষতি হয়েছে এবং কী করতে হবে।
                         </p>
 
-                        <div className="flex flex-col sm:flex-row gap-4 pt-2">
+                        <div className="flex flex-wrap gap-4 pt-2">
                             <Link to="/analyze" className="btn-primary px-8 py-4 text-base">
                                 🌿 ফসল বিশ্লেষণ করুন
                                 <ArrowRight className="w-5 h-5 ml-1" />
                             </Link>
-                            <Link to="/about" className="btn-secondary px-8 py-4 text-base">
-                                আরও জানুন
-                            </Link>
+                            <AudioGuidePlayer variant="hero" />
                         </div>
 
                         <div className="flex flex-wrap gap-x-6 gap-y-3 pt-4 border-t border-gray-100">
@@ -298,6 +297,9 @@ const HomePage = () => (
                 </div>
             </div>
         </section>
+
+        {/* Floating Audio Guide Widget */}
+        <AudioGuidePlayer variant="floating" />
     </div>
 );
 

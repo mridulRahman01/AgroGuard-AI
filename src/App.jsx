@@ -57,6 +57,7 @@ function App() {
               {/* Protected Routes */}
               <Route element={<ProtectedRoute />}>
                 <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/admin-dashboard" element={<Dashboard />} />
               </Route>
 
               {/* 404 Route */}
