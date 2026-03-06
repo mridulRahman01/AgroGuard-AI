@@ -31,9 +31,11 @@ export const OTPInput: React.FC<OTPInputProps> = ({
 
         setOtp([...otp.map((d, idx) => (idx === index ? element.value : d))]);
 
-        // Focus next input
-        if (element.nextSibling) {
-            (element.nextSibling as HTMLInputElement).focus();
+        // Focus next input only if a value was entered
+        if (element.value !== "") {
+            if (element.nextSibling) {
+                (element.nextSibling as HTMLInputElement).focus();
+            }
         }
     };
 
@@ -83,7 +85,7 @@ export const OTPInput: React.FC<OTPInputProps> = ({
                         maxLength={1}
                         key={index}
                         value={data}
-                        ref={(el) => inputRefs.current[index] = el}
+                        ref={(el) => { inputRefs.current[index] = el; }}
                         onChange={(e) => handleChange(e.target, index)}
                         onKeyDown={(e) => handleKeyDown(e, index)}
                         onPaste={handlePaste}

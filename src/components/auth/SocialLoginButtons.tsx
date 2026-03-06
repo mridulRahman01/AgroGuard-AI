@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { Provider } from '@supabase/supabase-js';
 import toast from 'react-hot-toast';
@@ -52,7 +52,7 @@ export const SocialLoginButtons = () => {
         <div className="space-y-4">
             <div className="flex items-center gap-4 py-2">
                 <div className="flex-1 h-px bg-gray-200"></div>
-                <span className="text-sm text-gray-500 font-medium" style={{ fontFamily: 'Hind Siliguri, sans-serif' }}>
+                <span className="text-sm text-gray-500 font-medium font-['Hind_Siliguri',sans-serif]">
                     অথবা
                 </span>
                 <div className="flex-1 h-px bg-gray-200"></div>
@@ -65,9 +65,8 @@ export const SocialLoginButtons = () => {
                         type="button"
                         onClick={() => handleLogin(id)}
                         disabled={loadingProvider !== null}
-                        className={`flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border font-medium transition-colors ${color} ${loadingProvider ? 'opacity-50 cursor-not-allowed' : ''
+                        className={`flex items-center justify-center gap-2 py-3 px-4 rounded-xl border font-medium transition-all font-['Inter',sans-serif] bg-white ${color} ${loadingProvider ? 'opacity-50 cursor-not-allowed' : 'hover:-translate-y-0.5 shadow-sm hover:shadow'
                             }`}
-                        style={{ fontFamily: 'Hind Siliguri, sans-serif' }}
                     >
                         {loadingProvider === id ? (
                             <Loader className="w-5 h-5 animate-spin" />
