@@ -115,7 +115,8 @@ export const analyzeImage = async (imageFile, cropType, user, token) => {
         });
 
         // 2. Send directly to Backend AI API
-        const response = await axios.post('http://localhost:5000/api/analyze', {
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+        const response = await axios.post(`${apiUrl}/analyze`, {
             userId: userId,
             imageBase64: base64Data,
             mimeType: imageFile.type,
