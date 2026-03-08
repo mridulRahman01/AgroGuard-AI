@@ -43,15 +43,38 @@ const ResultCard = ({ result }) => {
     const {
         diseaseName,
         diseaseNameEn,
-        damageLevel,
-        affectedArea,
-        confidence,
+        severityLevel, // mapping from AI
+        damageLevel, // fallback
+        damagePercentage, // mapping from AI 
+        affectedArea, // fallback/AI mix
+        confidenceScore, // mapping from AI
+        confidence, // fallback
+        problemDescription, // mapping to symptoms
+        recommendationDescription, // mapping
+        treatmentName, // mapping
+        dosage, // mapping
+        instructions, // mapping
         symptoms = [],
         recommendations = [],
         preventions = [],
     } = result;
 
-    const config = SEVERITY_CONFIG[damageLevel] || SEVERITY_CONFIG.low;
+    const finalDamageLevel = (severityLevel || damageLevel || 'high').toLowerCase();
+    const finalAffectedArea = damagePercentage || affectedArea || 0;
+    const finalConfidence = confidenceScore || confidence || 0;
+
+    // Map AI descriptions into the arrays expected by the UI if they exist natively
+    const finalSymptoms = symptoms.length > 0 ? symptoms : (problemDescription ? [problemDescription] : []);
+    const finalRecommendations = recommendations.length > 0 ? recommendations : (
+        recommendationDescription || treatmentName ? [
+            recommendationDescription,
+            treatmentName ? `ওষুধ: ${treatmentName}` : null,
+            dosage ? `মাত্রা: ${dosage}` : null,
+            instructions ? `নির্দেশনা: ${instructions}` : null
+        ].filter(Boolean) : []
+    );
+
+    const config = SEVERITY_CONFIG[finalDamageLevel] || SEVERITY_CONFIG.low;
     const SeverityIcon = config.icon;
 
     return (
@@ -87,26 +110,26 @@ const ResultCard = ({ result }) => {
                 {/* Stats Row */}
                 <div className="grid grid-cols-2 gap-3 mt-4">
                     <div className="bg-white/15 rounded-xl p-3">
-                        <div className="text-2xl font-bold">{affectedArea}%</div>
+                        <div className="text-2xl font-bold">{finalAffectedArea}%</div>
                         <div className="text-xs opacity-80" style={{ fontFamily: 'Hind Siliguri, sans-serif' }}>
                             জমি আক্রান্ত
                         </div>
                         <div className="progress-bar mt-2 bg-white/20">
                             <div
                                 className="h-full rounded-full bg-white/70 transition-all duration-1000"
-                                style={{ width: `${affectedArea}%` }}
+                                style={{ width: `${finalAffectedArea}%` }}
                             />
                         </div>
                     </div>
                     <div className="bg-white/15 rounded-xl p-3">
-                        <div className="text-2xl font-bold">{confidence}%</div>
+                        <div className="text-2xl font-bold">{finalConfidence}%</div>
                         <div className="text-xs opacity-80" style={{ fontFamily: 'Hind Siliguri, sans-serif' }}>
                             AI নিশ্চিততা
                         </div>
                         <div className="progress-bar mt-2 bg-white/20">
                             <div
                                 className="h-full rounded-full bg-white/70 transition-all duration-1000"
-                                style={{ width: `${confidence}%` }}
+                                style={{ width: `${finalConfidence}%` }}
                             />
                         </div>
                     </div>
@@ -116,14 +139,14 @@ const ResultCard = ({ result }) => {
             {/* Body */}
             <div className="p-6 md:p-8 space-y-6">
                 {/* Symptoms */}
-                {symptoms.length > 0 && (
+                {finalSymptoms.length > 0 && (
                     <div>
                         <h4 className="flex items-center gap-2 font-semibold text-gray-700 mb-3" style={{ fontFamily: 'Hind Siliguri, sans-serif' }}>
                             <Droplets className="w-4 h-4 text-blue-500" />
-                            লক্ষণসমূহ
+                            সমস্যা ও কারণ
                         </h4>
                         <ul className="space-y-2">
-                            {symptoms.map((s, i) => (
+                            {finalSymptoms.map((s, i) => (
                                 <li key={i} className="flex items-start gap-2 text-sm text-gray-600" style={{ fontFamily: 'Hind Siliguri, sans-serif' }}>
                                     <span className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-2 flex-shrink-0" />
                                     {s}
@@ -134,14 +157,14 @@ const ResultCard = ({ result }) => {
                 )}
 
                 {/* Recommendations */}
-                {recommendations.length > 0 && (
+                {finalRecommendations.length > 0 && (
                     <div>
                         <h4 className="flex items-center gap-2 font-semibold text-gray-700 mb-3" style={{ fontFamily: 'Hind Siliguri, sans-serif' }}>
                             <Lightbulb className="w-4 h-4 text-yellow-500" />
-                            সুপারিশকৃত পদক্ষেপ
+                            সুপারিশকৃত ঔষধ ও পদক্ষেপ
                         </h4>
                         <ul className="space-y-2">
-                            {recommendations.map((r, i) => (
+                            {finalRecommendations.map((r, i) => (
                                 <li key={i} className="flex items-start gap-3 text-sm" style={{ fontFamily: 'Hind Siliguri, sans-serif' }}>
                                     <span className="w-6 h-6 rounded-full bg-green-100 text-green-700 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
                                         {i + 1}

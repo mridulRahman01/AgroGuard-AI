@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { supabase } from '../utils/supabaseClient';
 
 // Base API instance - connect backend URL here when ready
 const api = axios.create({
@@ -97,21 +98,37 @@ export const MOCK_RESULTS = {
     },
 };
 
-// API functions (placeholder - connect when backend ready)
-export const analyzeImage = async (imageFile, cropType) => {
-    // TODO: Uncomment when backend is ready
-    // const formData = new FormData();
-    // formData.append('image', imageFile);
-    // formData.append('crop_type', cropType);
-    // const response = await api.post('/analyze', formData);
-    // return response.data;
+export const analyzeImage = async (imageFile, cropType, user, token) => {
+    try {
+        if (!user || (!user.id && !user.sub)) {
+            throw new Error("অ্যানালাইসিস করার জন্য অনুগ্রহ করে প্রথমে লগইন করুন।");
+        }
+        
+        const userId = user.id || user.sub;
 
-    // Mock response for now
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            resolve(MOCK_RESULTS[cropType] || MOCK_RESULTS['ধান']);
-        }, 2500);
-    });
+        // 1. Bypass Supabase Storage completely and encode to Base64
+        const base64Data = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(imageFile);
+            reader.onload = () => resolve(reader.result.split(',')[1]); // Extract raw base64 string
+            reader.onerror = error => reject(error);
+        });
+
+        // 2. Send directly to Backend AI API
+        const response = await axios.post('http://localhost:5000/api/analyze', {
+            userId: userId,
+            imageBase64: base64Data,
+            mimeType: imageFile.type,
+            cropType: cropType,
+            location: user.location || 'Unknown',
+            token: token
+        });
+
+        return response.data;
+    } catch (error) {
+        console.error("AI Analysis Failed:", error);
+        throw error;
+    }
 };
 
 export const submitContact = async (formData) => {

@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Upload, X, CheckCircle, Loader, Camera, FileImage, Microscope, Info, Leaf } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { useAuth } from '../hooks/useAuth';
 import { analyzeImage } from '../services/api';
 import ResultCard from '../components/ResultCard';
 
@@ -22,6 +23,7 @@ const AnalyzePage = () => {
         isAnalyzing, setIsAnalyzing,
         clearAnalysis,
     } = useApp();
+    const { user, session, isLoading: isAuthLoading } = useAuth();
 
     const [isDragging, setIsDragging] = useState(false);
     const [error, setError] = useState('');
@@ -46,14 +48,16 @@ const AnalyzePage = () => {
     const handleSubmit = async () => {
         if (!uploadedFile) { setError('প্রথমে একটি ছবি আপলোড করুন।'); return; }
         if (!selectedCrop) { setError('ফসলের ধরন বেছে নিন।'); return; }
+        if (isAuthLoading) { setError('অ্যাকাউন্ট চেক করা হচ্ছে, দয়া করে অপেক্ষা করুন...'); return; }
+        if (!user) { setError('অ্যানালাইসিস করার জন্য অনুগ্রহ করে প্রথমে লগইন করুন।'); return; }
         setError('');
         setIsAnalyzing(true);
         setAnalysisResult(null);
         try {
-            const result = await analyzeImage(uploadedFile, selectedCrop);
-            setAnalysisResult(result);
-        } catch {
-            setError('বিশ্লেষণে সমস্যা হয়েছে। আবার চেষ্টা করুন।');
+            const result = await analyzeImage(uploadedFile, selectedCrop, user, session?.access_token);
+            setAnalysisResult(result.report);
+        } catch (err) {
+            setError(err.message || 'বিশ্লেষণে সমস্যা হয়েছে। আবার চেষ্টা করুন।');
         } finally {
             setIsAnalyzing(false);
         }

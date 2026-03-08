@@ -24,24 +24,46 @@ const FarmerDashboard = () => {
                 // Fetch analysis history for this user
                 const { data, error } = await supabase
                     .from('analysis')
-                    .select('*')
-                    .eq('user_id', user.id)
-                    .order('created_at', { ascending: false });
+                    .select(`
+                        id,
+                        disease_name,
+                        confidence_score,
+                        analysis_date,
+                        media!inner (
+                            user_id,
+                            crop_type
+                        )
+                    `)
+                    .eq('media.user_id', user.id)
+                    .order('analysis_date', { ascending: false });
+
                 if (error) throw error;
-                setAnalysisHistory(data || []);
+
+                const formattedData = data?.map((a: any) => ({
+                    id: a.id,
+                    crop: a.media.crop_type,
+                    disease: a.disease_name,
+                    confidence: a.confidence_score,
+                    status: 'Success',
+                    created_at: a.analysis_date
+                })) || [];
+
+                setAnalysisHistory(formattedData);
 
                 // Calculate stats
-                const total = data?.length || 0;
-                const success = data?.filter((a: any) => a.status === 'Success').length || 0;
-                const failed = data?.filter((a: any) => a.status === 'Failed').length || 0;
+                const total = formattedData.length;
+                const success = formattedData.length; // all saved are successful right now
+                const failed = 0;
                 setStats({ total, success, failed });
 
                 // Chart data by crop
                 const cropMap: Record<string, number> = {};
-                data?.forEach((a: any) => {
+                formattedData.forEach((a: any) => {
                     cropMap[a.crop] = (cropMap[a.crop] || 0) + 1;
                 });
+                
                 setChartData(Object.entries(cropMap).map(([name, count]) => ({ name, count })));
+                
                 // Most analyzed crop
                 let maxCrop = '';
                 let maxCount = 0;
@@ -53,6 +75,7 @@ const FarmerDashboard = () => {
                 });
                 setMostAnalyzed(maxCrop);
             } catch (err: any) {
+                console.error(err);
                 toast.error('Could not load analysis history');
             } finally {
                 setLoading(false);
@@ -73,12 +96,36 @@ const FarmerDashboard = () => {
     // Wrap the entire dashboard in a fragment
     return (
         <>
-            <div className="w-12 h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center">
-                <Sprout className="w-6 h-6" />
-            </div>
-            <div>
-                <p className="text-sm font-medium text-gray-500">Most Analyzed Result</p>
-                <p className="text-2xl font-bold text-gray-900">{mostAnalyzed || 'N/A'}</p>
+            {/* Stats Overview */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+                    <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-3">
+                        <Activity className="w-5 h-5" />
+                    </div>
+                    <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+                    <p className="text-xs font-medium text-gray-500 mt-1">Total Analyzed</p>
+                </div>
+                <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+                    <div className="w-10 h-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center mb-3">
+                        <CheckCircle className="w-5 h-5" />
+                    </div>
+                    <p className="text-2xl font-bold text-gray-900">{stats.success}</p>
+                    <p className="text-xs font-medium text-gray-500 mt-1">Successful</p>
+                </div>
+                <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+                    <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mb-3">
+                        <Sprout className="w-5 h-5" />
+                    </div>
+                    <p className="text-2xl font-bold text-gray-900">{mostAnalyzed || 'None'}</p>
+                    <p className="text-xs font-medium text-gray-500 mt-1">Most Analyzed Result</p>
+                </div>
+                <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+                    <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center mb-3">
+                        <Stethoscope className="w-5 h-5" />
+                    </div>
+                    <p className="text-2xl font-bold text-gray-900">{chartData.length}</p>
+                    <p className="text-xs font-medium text-gray-500 mt-1">Different Crops</p>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

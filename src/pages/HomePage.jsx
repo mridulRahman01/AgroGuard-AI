@@ -63,7 +63,7 @@ const HomePage = () => (
         {/* ═══════════════════════════════════════
             HERO
         ═══════════════════════════════════════ */}
-        <section className="hero-pattern pt-20 md:pt-28 pb-16 md:pb-24 overflow-hidden border-b border-gray-100">
+        <section className="hero-pattern pt-20 md:pt-28 pb-16 md:pb-20 overflow-hidden border-b border-gray-100">
             <div className="container-main relative">
                 <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
 
@@ -74,13 +74,11 @@ const HomePage = () => (
                             AI-চালিত কৃষি সুরক্ষা
                         </div>
 
-                        <h1 className="text-hero">
-                            AI দিয়ে{' '}
-                            <span className="gradient-text">ফসল রক্ষা</span>{' '}
-                            করুন
+                        <h1 className="text-4xl md:text-5xl font-bold leading-tight text-gray-900 tracking-tight">
+                            AI দিয়ে <span className="gradient-text">ফসল রক্ষা</span> করুন
                         </h1>
 
-                        <p className="text-subtext max-w-lg">
+                        <p className="text-gray-600 text-base md:text-lg leading-relaxed max-w-lg">
                             আপনার ফসলের ছবি তুলুন এবং মাত্র কয়েক সেকেন্ডে জানুন কোন রোগ হয়েছে, কতটুকু ক্ষতি হয়েছে এবং কী করতে হবে।
                         </p>
 
@@ -175,18 +173,18 @@ const HomePage = () => (
         {/* ═══════════════════════════════════════
             FEATURES
         ═══════════════════════════════════════ */}
-        <section className="py-20 md:py-24 bg-white border-b border-gray-100">
+        <section className="py-16 md:py-20 bg-white border-b border-gray-100">
             <div className="container-main">
                 {/* Header */}
-                <div className="text-center mb-16 space-y-4 max-w-2xl mx-auto">
+                <div className="text-center mx-auto max-w-3xl mb-6 md:mb-8 space-y-4">
                     <div className="section-badge mx-auto">
                         <Zap className="w-4 h-4" />
                         আমাদের সুবিধাসমূহ
                     </div>
-                    <h2 className="text-section-title">
+                    <h2 className="text-2xl md:text-3xl font-semibold text-gray-900">
                         কেন AgroGuard AI ব্যবহার করবেন?
                     </h2>
-                    <p className="text-subtext">
+                    <p className="text-gray-600 text-base md:text-lg leading-relaxed">
                         আধুনিক AI প্রযুক্তি ব্যবহার করে আপনার ফসলকে রোগ থেকে রক্ষা করুন এবং ফলন বাড়ান।
                     </p>
                 </div>
@@ -194,12 +192,12 @@ const HomePage = () => (
                 {/* Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {FEATURES.map(({ icon: Icon, title, desc, gradient }) => (
-                        <div key={title} className="card group">
-                            <div className={`w-14 h-14 rounded-2xl ${gradient} flex items-center justify-center mb-6 transition-transform duration-300 group-hover:scale-110`}>
+                        <div key={title} className="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition-transform duration-300 hover:-translate-y-1 space-y-3 flex flex-col items-center text-center">
+                            <div className={`w-14 h-14 rounded-2xl ${gradient} flex items-center justify-center mb-1`}>
                                 <Icon className="w-7 h-7" />
                             </div>
-                            <h3 className="text-xl font-semibold text-gray-900 mb-3 block" style={{ fontFamily: 'Hind Siliguri, sans-serif' }}>{title}</h3>
-                            <p className="text-body flex-1">{desc}</p>
+                            <h3 className="text-xl font-semibold text-gray-900" style={{ fontFamily: 'Hind Siliguri, sans-serif' }}>{title}</h3>
+                            <p className="text-gray-600 text-base leading-relaxed flex-1">{desc}</p>
                         </div>
                     ))}
                 </div>
@@ -209,26 +207,26 @@ const HomePage = () => (
         {/* ═══════════════════════════════════════
             HOW IT WORKS
         ═══════════════════════════════════════ */}
-        <section className="py-20 md:py-24 bg-gray-50 border-b border-gray-100">
+        <section className="py-16 md:py-20 bg-gray-50 border-b border-gray-100">
             <div className="container-main">
-                <div className="text-center mb-16 space-y-4 max-w-2xl mx-auto">
-                    <h2 className="text-section-title">কীভাবে কাজ করে?</h2>
-                    <p className="text-subtext">মাত্র ৩টি সহজ ধাপে আপনার ফসলের রোগ নির্ণয় করুন</p>
+                <div className="text-center mx-auto max-w-3xl mb-6 md:mb-8 space-y-4">
+                    <h2 className="text-2xl md:text-3xl font-semibold text-gray-900">কীভাবে কাজ করে?</h2>
+                    <p className="text-gray-600 text-base md:text-lg leading-relaxed">মাত্র ৩টি সহজ ধাপে আপনার ফসলের রোগ নির্ণয় করুন</p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-0">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-0 mt-8">
                     {/* Connecting Line (Desktop) */}
-                    <div className="hidden md:block absolute top-1/2 left-0 right-0 h-0.5 bg-gray-200 -z-10 -translate-y-4" />
+                    <div className="hidden md:block absolute top-[4.5rem] left-[15%] right-[15%] h-[2px] bg-green-200 -z-10" />
 
                     {STEPS.map(({ step, icon, title, desc }, i) => (
-                        <div key={step} className="card bg-white relative">
-                            <div className="absolute -top-5 left-1/2 -translate-x-1/2 text-5xl bg-white p-2 rounded-full border-4 border-gray-50 shadow-sm">{icon}</div>
-
-                            <div className="pt-8 text-center flex-1 flex flex-col items-center">
-                                <div className="text-4xl font-black text-gray-100 select-none mb-2" style={{ fontFamily: 'Hind Siliguri, sans-serif' }}>{step}</div>
-                                <h3 className="text-xl font-semibold text-gray-900 mb-3" style={{ fontFamily: 'Hind Siliguri, sans-serif' }}>{title}</h3>
-                                <p className="text-body">{desc}</p>
+                        <div key={step} className="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition-transform duration-300 hover:-translate-y-1 relative pt-12 mt-8 md:mt-0 flex flex-col items-center text-center space-y-3">
+                            <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-white p-3 rounded-full shadow-md border-2 border-green-50 flex items-center justify-center">
+                                <span className="text-4xl">{icon}</span>
                             </div>
+
+                            <div className="text-3xl font-black text-gray-100 select-none" style={{ fontFamily: 'Hind Siliguri, sans-serif' }}>{step}</div>
+                            <h3 className="text-xl font-semibold text-gray-900" style={{ fontFamily: 'Hind Siliguri, sans-serif' }}>{title}</h3>
+                            <p className="text-gray-600 text-base leading-relaxed">{desc}</p>
                         </div>
                     ))}
                 </div>
@@ -238,30 +236,30 @@ const HomePage = () => (
         {/* ═══════════════════════════════════════
             TESTIMONIALS
         ═══════════════════════════════════════ */}
-        <section className="py-20 md:py-24 bg-white border-b border-gray-100">
+        <section className="py-16 md:py-20 bg-white border-b border-gray-100">
             <div className="container-main">
-                <div className="text-center mb-16 space-y-4 max-w-2xl mx-auto">
-                    <h2 className="text-section-title">কৃষকদের মতামত</h2>
-                    <p className="text-subtext">দেখুন যারা আমাদের পরিষেবা ব্যবহার করে উপকৃত হয়েছেন</p>
+                <div className="text-center mx-auto max-w-3xl mb-6 md:mb-8 space-y-4">
+                    <h2 className="text-2xl md:text-3xl font-semibold text-gray-900">কৃষকদের মতামত</h2>
+                    <p className="text-gray-600 text-base md:text-lg leading-relaxed">দেখুন যারা আমাদের পরিষেবা ব্যবহার করে উপকৃত হয়েছেন</p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     {TESTIMONIALS.map(({ name, location, text, rating, crop }) => (
-                        <div key={name} className="card bg-white border border-gray-100">
-                            <div className="flex gap-1 mb-4">
+                        <div key={name} className="bg-white border text-center border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition duration-300 p-6 space-y-4 flex flex-col items-center">
+                            <div className="flex justify-center gap-1 mb-2">
                                 {[...Array(rating)].map((_, j) => (
                                     <Star key={j} className="w-5 h-5 text-yellow-500 fill-yellow-500" />
                                 ))}
                             </div>
-                            <p className="text-body italic mb-6 break-words">"{text}"</p>
+                            <p className="text-gray-600 text-base leading-relaxed italic flex-1 break-words pb-4 border-b border-gray-100 w-full">"{text}"</p>
 
-                            <div className="mt-auto pt-4 border-t border-gray-100 flex items-center gap-4">
+                            <div className="flex flex-col items-center justify-center gap-3 pt-2 w-full">
                                 <div className="w-12 h-12 rounded-full bg-green-100 text-green-700 flex items-center justify-center font-bold text-lg flex-shrink-0">
                                     {name[0]}
                                 </div>
                                 <div>
-                                    <div className="font-semibold text-gray-900" style={{ fontFamily: 'Hind Siliguri, sans-serif' }}>{name}</div>
-                                    <div className="text-sm text-gray-500" style={{ fontFamily: 'Hind Siliguri, sans-serif' }}>{crop} • {location}</div>
+                                    <div className="font-semibold text-gray-900 text-center" style={{ fontFamily: 'Hind Siliguri, sans-serif' }}>{name}</div>
+                                    <div className="text-sm text-gray-500 text-center" style={{ fontFamily: 'Hind Siliguri, sans-serif' }}>{crop} • {location}</div>
                                 </div>
                             </div>
                         </div>
@@ -273,26 +271,25 @@ const HomePage = () => (
         {/* ═══════════════════════════════════════
             CTA
         ═══════════════════════════════════════ */}
-        <section className="py-20 md:py-32 bg-green-50 relative overflow-hidden">
+        <section className="py-20 bg-green-50 relative overflow-hidden text-center">
             <div className="absolute inset-0 pointer-events-none">
                 <div className="absolute top-0 right-0 w-96 h-96 -translate-y-1/2 translate-x-1/3 rounded-full bg-green-200/50 blur-3xl opacity-60" />
                 <div className="absolute bottom-0 left-0 w-96 h-96 translate-y-1/2 -translate-x-1/3 rounded-full bg-green-200/50 blur-3xl opacity-60" />
             </div>
 
-            <div className="container-main text-center relative z-10 max-w-3xl space-y-8">
-                <div className="text-6xl mb-6 animate-float">🌾</div>
+            <div className="container-main relative z-10 max-w-3xl mx-auto space-y-6">
+                <div className="text-6xl mb-4 animate-float flex justify-center">🌾</div>
                 <h2 className="text-3xl md:text-5xl font-bold text-gray-900 tracking-tight" style={{ fontFamily: 'Hind Siliguri, sans-serif' }}>আজই শুরু করুন</h2>
-                <p className="text-xl text-gray-600 leading-relaxed">
+                <p className="text-lg md:text-xl text-gray-600 leading-relaxed max-w-2xl mx-auto">
                     বিনামূল্যে আপনার ফসলের বিশ্লেষণ করুন এবং সঠিক সময়ে সঠিক ব্যবস্থা নিন।
                 </p>
-                <div className="pt-4">
+                <div className="pt-6 mt-6">
                     <Link
                         to="/analyze"
-                        className="inline-flex items-center justify-center gap-3 bg-green-600 text-white font-medium px-8 py-4 rounded-xl hover:bg-green-700 transition-all duration-300 shadow-lg shadow-green-600/20 hover:shadow-xl hover:shadow-green-600/30 hover:-translate-y-1 text-lg w-full sm:w-auto"
+                        className="inline-flex flex-col sm:flex-row items-center justify-center gap-3 bg-green-600 text-white font-medium px-8 py-4 rounded-xl text-lg hover:bg-green-700 transition duration-300 hover:scale-105 shadow-lg w-full md:w-auto"
                         style={{ fontFamily: 'Hind Siliguri, sans-serif' }}
                     >
                         🌿 ফসল বিশ্লেষণ শুরু করুন
-                        <ArrowRight className="w-5 h-5" />
                     </Link>
                 </div>
             </div>

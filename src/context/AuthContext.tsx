@@ -64,9 +64,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             } catch (error) {
                 console.error('Error during init session:', error);
             } finally {
+                console.log("Setting isLoading to false from init session");
                 setIsLoading(false);
             }
         };
+
+        // Fallback to ensure we never get stuck loading
+        const timeoutId = setTimeout(() => {
+            console.log("AuthContext timeout triggered - forcefully disabling loading state");
+            setIsLoading(false);
+        }, 5000);
 
         initializeAuth();
 
@@ -86,12 +93,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 } catch (error) {
                     console.error('Error during auth state change:', error);
                 } finally {
+                    console.log("Setting isLoading to false from auth state change listener");
                     setIsLoading(false);
                 }
             }
         );
 
-        return () => subscription.unsubscribe();
+        return () => {
+            clearTimeout(timeoutId);
+            subscription.unsubscribe();
+        };
     }, []);
 
     const signInWithOAuth = async (provider: Provider) => {

@@ -1,6 +1,7 @@
-
+import React, { useEffect, useState } from 'react';
 import { Users, Activity, CheckCircle, XCircle, ShieldAlert, Cpu } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
+import axios from 'axios';
 
 const dummyUserActivity = [
     { id: 1, user: 'Rahim Mia', crop: 'Rice', disease: 'Leaf Blast', confidence: '91%', result: 'Success', date: 'Today' },
@@ -28,6 +29,27 @@ const dummyModelPerformance = [
 ];
 
 const AdminDashboard = () => {
+    const [recentAnalyses, setRecentAnalyses] = useState<any[]>([]);
+    const [stats, setStats] = useState({ users: 0, analyses: 0, success: 0, failed: 0, activeToday: 0 });
+
+    useEffect(() => {
+        const fetchAdminData = async () => {
+            try {
+                const response = await axios.get('http://localhost:5000/api/admin/dashboard');
+                const data = response.data;
+
+                if (data.success) {
+                    setRecentAnalyses(data.recentAnalyses);
+                    setStats(data.stats);
+                }
+            } catch (error) {
+                console.error('Error fetching admin data:', error);
+            }
+        };
+
+        fetchAdminData();
+    }, []);
+
     return (
         <div className="space-y-6 animate-fade-in-up">
 
@@ -46,11 +68,11 @@ const AdminDashboard = () => {
             {/* Stats Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
                 {[
-                    { label: 'Total Users', value: '320', icon: Users, color: 'blue' },
-                    { label: 'Total Analyses', value: '1,540', icon: Activity, color: 'indigo' },
-                    { label: 'Successes', value: '1,340', icon: CheckCircle, color: 'green' },
-                    { label: 'Failed', value: '200', icon: XCircle, color: 'red' },
-                    { label: 'Active Today', value: '56', icon: Activity, color: 'amber' },
+                    { label: 'Total Users', value: stats.users.toString(), icon: Users, color: 'blue' },
+                    { label: 'Total Analyses', value: stats.analyses.toString(), icon: Activity, color: 'indigo' },
+                    { label: 'Successes', value: stats.success.toString(), icon: CheckCircle, color: 'green' },
+                    { label: 'Failed', value: stats.failed.toString(), icon: XCircle, color: 'red' },
+                    { label: 'Active Today', value: stats.activeToday.toString(), icon: Activity, color: 'amber' },
                 ].map((stat, i) => {
                     const Icon = stat.icon;
                     return (
@@ -86,7 +108,11 @@ const AdminDashboard = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
-                                {dummyUserActivity.map((row) => (
+                                {recentAnalyses.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={4} className="text-center py-4 text-gray-400">No analyses yet.</td>
+                                    </tr>
+                                ) : recentAnalyses.map((row) => (
                                     <tr key={row.id} className="hover:bg-gray-50/30 transition-colors">
                                         <td className="px-6 py-4 font-medium text-gray-900">{row.user}</td>
                                         <td className="px-6 py-4">

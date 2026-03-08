@@ -4,7 +4,7 @@ import { AppProvider } from './context/AppContext';
 import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-import ChatBot from './components/ChatBot';
+import SupportChatbot from './components/chat/SupportChatbot';
 import HomePage from './pages/HomePage';
 import AnalyzePage from './pages/AnalyzePage';
 import AboutPage from './pages/AboutPage';
@@ -31,7 +31,7 @@ const AuthLayout = ({ children }) => {
         {children}
       </main>
       {!isAuthPage && <Footer />}
-      {!isAuthPage && <ChatBot />}
+      {!isAuthPage && <SupportChatbot />}
     </div>
   );
 };
@@ -46,16 +46,15 @@ function App() {
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<HomePage />} />
-              <Route path="/analyze" element={<AnalyzePage />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/contact" element={<ContactPage />} />
 
               {/* Auth Routes */}
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
-
               {/* Protected Routes */}
               <Route element={<ProtectedRoute />}>
+                <Route path="/analyze" element={<AnalyzePage />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/admin-dashboard" element={<Dashboard />} />
               </Route>
