@@ -4,11 +4,13 @@ import { AppProvider } from './context/AppContext';
 import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-import SupportChatbot from './components/chat/SupportChatbot';
+import { DashboardLayout } from './components/layout/DashboardLayout';
 import HomePage from './pages/HomePage';
 import AnalyzePage from './pages/AnalyzePage';
 import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
+import ChatPage from './pages/ChatPage';
+import Settings from './pages/Settings';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
@@ -20,18 +22,14 @@ const ScrollToTop = () => {
   return null;
 };
 
-const AuthLayout = ({ children }) => {
-  const { pathname } = useLocation();
-  const isAuthPage = pathname === '/login' || pathname === '/signup';
-
+const PublicLayout = ({ children }) => {
   return (
     <div className="flex flex-col min-h-screen">
-      {!isAuthPage && <Navbar />}
+      <Navbar />
       <main className="flex-1">
         {children}
       </main>
-      {!isAuthPage && <Footer />}
-      {!isAuthPage && <SupportChatbot />}
+      <Footer />
     </div>
   );
 };
@@ -42,25 +40,33 @@ function App() {
       <AppProvider>
         <BrowserRouter>
           <ScrollToTop />
-          <AuthLayout>
-            <Routes>
-              {/* Public Routes */}
+          <Routes>
+            {/* Public Layout Routes */}
+            <Route element={<PublicLayout><Outlet /></PublicLayout>}>
               <Route path="/" element={<HomePage />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/contact" element={<ContactPage />} />
+            </Route>
 
-              {/* Auth Routes */}
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
-              {/* Protected Routes */}
-              <Route element={<ProtectedRoute />}>
-                <Route path="/analyze" element={<AnalyzePage />} />
+            {/* Auth Routes (No Navbar/Footer) */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+
+            {/* Protected Routes inside DashboardLayout */}
+            <Route element={<ProtectedRoute />}>
+              <Route element={<DashboardLayout />}>
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/admin-dashboard" element={<Dashboard />} />
+                <Route path="/analyze" element={<AnalyzePage />} />
+                {/* Chat and Settings pages */}
+                <Route path="/chat" element={<ChatPage />} />
+                <Route path="/settings" element={<Settings />} />
               </Route>
+            </Route>
 
-              {/* 404 Route */}
-              <Route path="*" element={
+            {/* 404 Route */}
+            <Route path="*" element={
+              <PublicLayout>
                 <div className="flex items-center justify-center py-32 bg-green-50">
                   <div className="text-center">
                     <div className="text-8xl mb-6">🌿</div>
@@ -75,9 +81,9 @@ function App() {
                     </a>
                   </div>
                 </div>
-              } />
-            </Routes>
-          </AuthLayout>
+              </PublicLayout>
+            } />
+          </Routes>
         </BrowserRouter>
       </AppProvider>
     </AuthProvider>
