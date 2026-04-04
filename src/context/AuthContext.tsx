@@ -34,14 +34,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const fetchUserProfile = async (userId: string) => {
         try {
             const { data, error } = await supabase
-                .from('users')
-                .select('role, name')
+                .from('profiles')
+                .select('role, full_name')
                 .eq('id', userId)
-                .single();
+                .maybeSingle();
 
             if (data && !error) {
                 setRole(data.role);
-                setProfileName(data.name);
+                setProfileName(data.full_name);
             }
         } catch (err) {
             console.error('Error fetching user profile:', err);
@@ -51,35 +51,58 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     useEffect(() => {
         // Initial session check
         const initializeAuth = async () => {
-            const { data: { session: currentSession } } = await supabase.auth.getSession();
-            setSession(currentSession);
-            setUser(currentSession?.user ?? null);
+            try {
+                const { data: { session: currentSession }, error } = await supabase.auth.getSession();
+                if (error) throw error;
 
-            if (currentSession?.user) {
-                await fetchUserProfile(currentSession.user.id);
+                setSession(currentSession);
+                setUser(currentSession?.user ?? null);
+
+                if (currentSession?.user) {
+                    await fetchUserProfile(currentSession.user.id);
+                }
+            } catch (error) {
+                console.error('Error during init session:', error);
+            } finally {
+                console.log("Setting isLoading to false from init session");
+                setIsLoading(false);
             }
-            setIsLoading(false);
         };
+
+        // Fallback to ensure we never get stuck loading
+        const timeoutId = setTimeout(() => {
+            console.log("AuthContext timeout triggered - forcefully disabling loading state");
+            setIsLoading(false);
+        }, 5000);
 
         initializeAuth();
 
         // Listen for auth changes (Login, Logout, Token Refresh)
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             async (_event, newSession) => {
-                setSession(newSession);
-                setUser(newSession?.user ?? null);
+                try {
+                    setSession(newSession);
+                    setUser(newSession?.user ?? null);
 
-                if (newSession?.user) {
-                    await fetchUserProfile(newSession.user.id);
-                } else {
-                    setRole(null);
-                    setProfileName(null);
+                    if (newSession?.user) {
+                        await fetchUserProfile(newSession.user.id);
+                    } else {
+                        setRole(null);
+                        setProfileName(null);
+                    }
+                } catch (error) {
+                    console.error('Error during auth state change:', error);
+                } finally {
+                    console.log("Setting isLoading to false from auth state change listener");
+                    setIsLoading(false);
                 }
-                setIsLoading(false);
             }
         );
 
-        return () => subscription.unsubscribe();
+        return () => {
+            clearTimeout(timeoutId);
+            subscription.unsubscribe();
+        };
     }, []);
 
     const signInWithOAuth = async (provider: Provider) => {
@@ -99,26 +122,39 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             err = error;
             if (error) {
                 console.error('Supabase global signout failed:', error.message);
-                // Fallback to clear the local session if the server request fails (common with OAuth)
                 await supabase.auth.signOut({ scope: 'local' });
             }
         } catch (e) {
             console.error('Unexpected error during signout:', e);
-            // Supreme fallback: clear anything that looks like a supabase token from localStorage
-            for (const key in localStorage) {
-                if (key.startsWith('sb-')) {
-                    localStorage.removeItem(key);
+            err = e instanceof Error ? e : new Error(String(e));
+        } finally {
+            // Supreme fallback: aggressively clear localStorage directly
+            const keysToRemove = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith('sb-')) {
+                    keysToRemove.push(key);
                 }
             }
-        } finally {
-            // 1. Force state reset immediately so UI responds (Navbar disappears, etc.)
+            keysToRemove.forEach(k => localStorage.removeItem(k));
+
+            // Check sessionStorage too
+            const sessionKeysToRemove = [];
+            for (let i = 0; i < sessionStorage.length; i++) {
+                const key = sessionStorage.key(i);
+                if (key && key.startsWith('sb-')) {
+                    sessionKeysToRemove.push(key);
+                }
+            }
+            sessionKeysToRemove.forEach(k => sessionStorage.removeItem(k));
+
+            // Force state reset
             setSession(null);
             setUser(null);
             setRole(null);
             setProfileName(null);
             setIsLoading(false);
 
-            // 2. If the URL still has an OAuth hash (access_token), clear it so it doesn't auto-login again
             if (window.location.hash.includes('access_token')) {
                 window.history.replaceState(null, '', window.location.pathname + window.location.search);
             }

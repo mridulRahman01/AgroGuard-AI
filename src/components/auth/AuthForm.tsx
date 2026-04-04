@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -10,21 +11,22 @@ interface AuthFormProps {
     type: 'login' | 'signup';
 }
 
-const authSchema = z.object({
-    name: z.string().min(2, 'নাম কমপক্ষে ২ অক্ষরের হতে হবে').optional(),
+const getSchema = (type: 'login' | 'signup') => z.object({
     email: z.string().email('অনুগ্রহ করে সঠিক ইমেইল দিন'),
-    password: z.string().min(6, 'পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে'),
-    role: z.enum(['Farmer', 'Officer', 'Admin']).optional()
+    password: z.string().min(8, 'পাসওয়ার্ড কমপক্ষে ৮ অক্ষরের হতে হবে'),
+    name: type === 'signup' ? z.string().min(2, 'নাম কমপক্ষে ২ অক্ষরের হতে হবে') : z.string().optional(),
+    role: type === 'signup' ? z.enum(['Farmer', 'Agricultural Officer', 'Admin']) : z.enum(['Farmer', 'Agricultural Officer', 'Admin']).optional()
 });
 
-type AuthFormData = z.infer<typeof authSchema>;
+type AuthFormData = z.infer<ReturnType<typeof getSchema>>;
 
 export const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const navigate = useNavigate();
 
     const { register, handleSubmit, formState: { errors } } = useForm<AuthFormData>({
-        resolver: zodResolver(authSchema),
+        resolver: zodResolver(getSchema(type)),
         defaultValues: {
             role: 'Farmer'
         }
@@ -34,7 +36,8 @@ export const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
         setIsLoading(true);
         try {
             if (type === 'signup') {
-                const { error } = await supabase.auth.signUp({
+                // 1. Create account in Supabase Auth
+                const { error: authError } = await supabase.auth.signUp({
                     email: data.email,
                     password: data.password,
                     options: {
@@ -44,16 +47,58 @@ export const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
                         }
                     }
                 });
-                if (error) throw error;
-                toast.success('অ্যাকাউন্ট তৈরি সফল! ইমেইল ভেরিফিকেশন চেক করুন।', { duration: 5000 });
+
+                if (authError) {
+                    if (authError.status === 429 || authError.message.includes('rate limit')) {
+                        toast.error('অত্যধিক চেষ্টা করা হয়েছে, কিছুক্ষণ পর আবার চেষ্টা করুন');
+                    } else if (authError.message.includes('already registered')) {
+                        toast.error('এই ইমেইলটি ইতিমধ্যে ব্যবহৃত হয়েছে');
+                    } else if (authError.message.toLowerCase().includes('password')) {
+                        toast.error('পাসওয়ার্ড আরও শক্তিশালী হতে হবে');
+                    } else {
+                        toast.error(authError.message || 'নেটওয়ার্ক ত্রুটি');
+                    }
+                    return;
+                }
+
+                // Do NOT insert into profiles manually! The database trigger handles it.
+                toast.success('অ্যাকাউন্ট সফলভাবে তৈরি হয়েছে!');
+                navigate('/login');
             } else {
-                const { error } = await supabase.auth.signInWithPassword({
+                // Login
+                const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
                     email: data.email,
                     password: data.password,
                 });
-                if (error) throw error;
-                // Redirect will be handled by the onAuthStateChange in App/ProtectedRoute
-                toast.success('সফলভাবে লগইন হয়েছে!');
+                if (loginError) {
+                    if (loginError.message.toLowerCase().includes('invalid')) {
+                        toast.error('ভুল ইমেইল বা পাসওয়ার্ড');
+                    } else if (loginError.message.toLowerCase().includes('not found')) {
+                        toast.error('অ্যাকাউন্ট খুঁজে পাওয়া যায়নি');
+                    } else if (loginError.message.toLowerCase().includes('email not confirmed')) {
+                        toast.error('দয়া করে আপনার ইমেইল ভেরিফাই করুন');
+                    } else {
+                        toast.error(loginError.message || 'লগইন করতে সমস্যা হয়েছে');
+                    }
+                    return;
+                }
+
+                // Fetch user role and redirect
+                if (loginData?.user) {
+                    const { data: profile } = await supabase
+                        .from('profiles')
+                        .select('role')
+                        .eq('id', loginData.user.id)
+                        .maybeSingle();
+
+                    toast.success('লগইন সফল হয়েছে');
+
+                    if (profile?.role === 'Admin') {
+                        navigate('/admin-dashboard');
+                    } else {
+                        navigate('/dashboard');
+                    }
+                }
             }
         } catch (error: any) {
             toast.error(error.message || 'একটি ত্রুটি ঘটেছে');
@@ -63,53 +108,60 @@ export const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
     };
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 w-full">
             {type === 'signup' && (
-                <div className="flex flex-col space-y-2">
-                    <label className="text-gray-700 text-sm font-semibold" style={{ fontFamily: 'Hind Siliguri, sans-serif' }}>
-                        আপনার নাম *
+                <div className="flex flex-col space-y-2 relative pb-2">
+                    <label className="text-gray-700 text-sm font-semibold font-['Hind_Siliguri',sans-serif]">
+                        আপনার নাম <span className="text-red-500">*</span>
                     </label>
                     <input
                         {...register('name')}
                         type="text"
                         placeholder="আপনার নাম লিখুন"
-                        className={`input-field ${errors.name ? 'border-red-300 focus:ring-red-200' : ''}`}
+                        className={`input-field font-['Hind_Siliguri',sans-serif] bg-white border border-gray-200 rounded-xl px-4 py-3 placeholder-gray-400 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all ${errors.name ? 'border-red-300 focus:ring-red-200' : ''}`}
                     />
                     {errors.name && (
-                        <p className="text-red-500 text-xs flex items-center gap-1 font-medium" style={{ fontFamily: 'Hind Siliguri, sans-serif' }}>
+                        <p className="text-red-500 text-xs flex items-center gap-1 font-medium mt-1 font-['Hind_Siliguri',sans-serif] absolute -bottom-4">
                             <AlertCircle className="w-3 h-3" /> {errors.name.message}
                         </p>
                     )}
                 </div>
             )}
 
-            <div className="flex flex-col space-y-2">
-                <label className="text-gray-700 text-sm font-semibold" style={{ fontFamily: 'Hind Siliguri, sans-serif' }}>
-                    ইমেইল ঠিকানা *
+            <div className={`flex flex-col space-y-2 relative pb-2 ${type === 'signup' ? 'mt-4' : ''}`}>
+                <label className="text-gray-700 text-sm font-semibold font-['Hind_Siliguri',sans-serif]">
+                    ইমেইল ঠিকানা <span className="text-red-500">*</span>
                 </label>
                 <input
                     {...register('email')}
                     type="email"
                     placeholder="example@email.com"
-                    className={`input-field ${errors.email ? 'border-red-300 focus:ring-red-200' : ''}`}
+                    className={`input-field font-['Inter',sans-serif] bg-white border border-gray-200 rounded-xl px-4 py-3 placeholder-gray-400 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all ${errors.email ? 'border-red-300 focus:ring-red-200' : ''}`}
                 />
                 {errors.email && (
-                    <p className="text-red-500 text-xs flex items-center gap-1 font-medium" style={{ fontFamily: 'Hind Siliguri, sans-serif' }}>
+                    <p className="text-red-500 text-xs flex items-center gap-1 font-medium mt-1 font-['Hind_Siliguri',sans-serif] absolute -bottom-4">
                         <AlertCircle className="w-3 h-3" /> {errors.email.message}
                     </p>
                 )}
             </div>
 
-            <div className="flex flex-col space-y-2">
-                <label className="text-gray-700 text-sm font-semibold" style={{ fontFamily: 'Hind Siliguri, sans-serif' }}>
-                    পাসওয়ার্ড *
-                </label>
+            <div className="flex flex-col space-y-2 relative pb-2 mt-4">
+                <div className="flex justify-between items-center mb-1">
+                    <label className="text-gray-700 text-sm font-semibold font-['Hind_Siliguri',sans-serif]">
+                        পাসওয়ার্ড <span className="text-red-500">*</span>
+                    </label>
+                    {type === 'login' && (
+                        <a href="#" className="text-sm font-medium text-green-600 hover:text-green-700 hover:underline font-['Hind_Siliguri',sans-serif]">
+                            পাসওয়ার্ড ভুলে গেছেন?
+                        </a>
+                    )}
+                </div>
                 <div className="relative">
                     <input
                         {...register('password')}
                         type={showPassword ? 'text' : 'password'}
                         placeholder="••••••••"
-                        className={`input-field w-full pr-10 ${errors.password ? 'border-red-300 focus:ring-red-200' : ''}`}
+                        className={`input-field font-['Inter',sans-serif] bg-white border border-gray-200 rounded-xl px-4 py-3 pr-10 placeholder-gray-400 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all w-full tracking-wider ${errors.password ? 'border-red-300 focus:ring-red-200' : ''}`}
                     />
                     <button
                         type="button"
@@ -120,50 +172,37 @@ export const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
                     </button>
                 </div>
                 {errors.password && (
-                    <p className="text-red-500 text-xs flex items-center gap-1 font-medium" style={{ fontFamily: 'Hind Siliguri, sans-serif' }}>
+                    <p className="text-red-500 text-xs flex items-center gap-1 font-medium mt-1 font-['Hind_Siliguri',sans-serif] absolute -bottom-4">
                         <AlertCircle className="w-3 h-3" /> {errors.password.message}
                     </p>
                 )}
             </div>
 
             {type === 'signup' && (
-                <div className="flex flex-col space-y-2">
-                    <label className="text-gray-700 text-sm font-semibold" style={{ fontFamily: 'Hind Siliguri, sans-serif' }}>
-                        ব্যবহারকারীর ধরন *
+                <div className="flex flex-col space-y-2 mt-4">
+                    <label className="text-gray-700 text-sm font-semibold font-['Hind_Siliguri',sans-serif] mb-1">
+                        ব্যবহারকারীর ধরন <span className="text-red-500">*</span>
                     </label>
                     <select
                         {...register('role')}
-                        className="input-field"
-                        style={{ fontFamily: 'Hind Siliguri, sans-serif' }}
+                        className="input-field font-['Hind_Siliguri',sans-serif] text-sm bg-white border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all appearance-none cursor-pointer"
+                        style={{ backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: `right 1rem center`, backgroundRepeat: `no-repeat`, backgroundSize: `1.5em 1.5em` }}
                     >
                         <option value="Farmer">কৃষক</option>
-                        <option value="Officer">কৃষি কর্মকর্তা</option>
+                        <option value="Agricultural Officer">কৃষি কর্মকর্তা</option>
                         <option value="Admin">অ্যাডমিন</option>
                     </select>
-                </div>
-            )}
-
-            {type === 'login' && (
-                <div className="flex items-center justify-between pb-2">
-                    <label className="flex items-center gap-2 cursor-pointer group">
-                        <input type="checkbox" className="w-4 h-4 text-green-600 rounded border-gray-300 focus:ring-green-500" />
-                        <span className="text-sm text-gray-600 group-hover:text-gray-900 transition-colors" style={{ fontFamily: 'Hind Siliguri, sans-serif' }}>আমাকে মনে রাখুন</span>
-                    </label>
-                    <a href="#" className="text-sm font-semibold text-green-600 hover:text-green-700 hover:underline" style={{ fontFamily: 'Hind Siliguri, sans-serif' }}>
-                        পাসওয়ার্ড ভুলে গেছেন?
-                    </a>
                 </div>
             )}
 
             <button
                 type="submit"
                 disabled={isLoading}
-                className={`w-full py-4 rounded-xl font-semibold text-lg transition-all duration-300 flex justify-center items-center gap-2 ${isLoading ? 'bg-green-700/70 text-white cursor-not-allowed' : 'btn-primary shadow-lg shadow-green-600/20'
+                className={`w-full py-3.5 mt-8 rounded-xl font-bold text-base transition-all duration-300 flex justify-center items-center gap-2 font-['Hind_Siliguri',sans-serif] ${isLoading ? 'bg-green-700/70 text-white cursor-not-allowed' : 'bg-[#eab308] hover:bg-[#ca8a04] text-gray-900 shadow-md hover:shadow-lg'
                     }`}
-                style={{ fontFamily: 'Hind Siliguri, sans-serif' }}
             >
                 {isLoading ? (
-                    <><Loader className="w-5 h-5 animate-spin" /> প্রক্রিয়াকরণ চলছে...</>
+                    <><Loader className="w-5 h-5 animate-spin" /> {type === 'login' ? 'লগইন হচ্ছে...' : 'অ্যাকাউন্ট তৈরি হচ্ছে...'}</>
                 ) : type === 'login' ? (
                     'লগইন করুন'
                 ) : (
